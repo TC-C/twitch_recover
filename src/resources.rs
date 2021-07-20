@@ -1,8 +1,9 @@
+use chrono::NaiveDateTime;
 use lazy_static::lazy_static;
 use regex::Regex;
+use reqwest::blocking::get;
 use std::io::Read;
 use sha1::{Sha1, Digest};
-use chrono::NaiveDateTime;
 
 lazy_static! {
     pub(crate) static ref GET_STREAM_ID: Regex = Regex::new("(data-stream=\").*?(\")").unwrap(); //13..24
@@ -22,7 +23,7 @@ pub(crate) const CLOUDFRONT_DOMAINS: [&str; 8] = [
 
 pub(crate) fn get_page_source(url: &str) -> String {
     let mut source = String::new();
-    reqwest::blocking::get(url)
+    get(url)
         .unwrap()
         .read_to_string(&mut source)
         .unwrap();
@@ -40,4 +41,15 @@ pub(crate) fn get_unix_time(time: &str) -> i64 {
     utc_time.timestamp()
 }
 
-pub(crate) fn make_query(loc: &str) {}
+/// Returns loc if a request can successfully be made
+pub(crate) fn make_request(loc: &str) -> Result<String, ()> {
+    let mut response = String::new();
+    get(loc)
+        .unwrap()
+        .read_to_string(&mut response);
+    if response.contains("Error") || response.contains("not found") {
+        Err(())
+    } else {
+        Ok(String::from(loc))
+    }
+}
