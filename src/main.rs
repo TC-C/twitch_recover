@@ -4,7 +4,7 @@ use vod_core::{compute_vod};
 mod resources;
 mod vod_core;
 
-fn main() { vod_recover_reader()}
+fn main() { vod_recover_reader() }
 
 fn vod_recover_reader() {
     println!("Enter a twitchtracker link that points to the stream >>> ");
@@ -13,6 +13,9 @@ fn vod_recover_reader() {
         .read_line(&mut twitchtracker_link)
         .unwrap();
     twitchtracker_link = String::from(twitchtracker_link.trim_end_matches(&['\r', '\n'][..]));
-    let vod_m3u8 = compute_vod(&twitchtracker_link);
+    match compute_vod(&twitchtracker_link) {
+        Ok(link) => println!("{}", link),
+        Err(_) => println!("Link not found")
+    }
 }
 
