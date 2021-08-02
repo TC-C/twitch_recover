@@ -4,7 +4,6 @@ use std::thread::{JoinHandle, spawn};
 
 pub(crate) fn compute_vod(tracker_link: &str) -> Result<String, ()> {
     let page_source = get_page_source(tracker_link);
-    dbg!(&page_source);
     let time_stamp = &INDIVIDUAL_TIME_STAMP
         .find(&page_source)
         .unwrap().as_str()[15..34];
@@ -31,9 +30,7 @@ fn test_links(subdirectory: &str) -> Result<String, ()> {
     let mut threads: Vec<JoinHandle<Result<String, ()>>> = Vec::with_capacity(CLOUDFRONT_DOMAINS.len());
     for DOMAIN in CLOUDFRONT_DOMAINS {
         let url = format!("https://{}.cloudfront.net/{}/chunked/index-dvr.m3u8", DOMAIN, subdirectory);
-        let thread = spawn(move || {
-            make_request(&url)
-        });
+        let thread = spawn(move || make_request(&url));
         threads.push(thread);
     }
     for thread in threads {
