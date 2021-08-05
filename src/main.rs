@@ -15,7 +15,7 @@ fn vod_recover_reader() {
     twitchtracker_link = String::from(twitchtracker_link.trim_end_matches(&['\r', '\n'][..]));
     match compute_vod(&twitchtracker_link) {
         Ok(link) => println!("{}", link),
-        Err(_) => println!("Link not found")
+        Err(e) => eprintln!("{}", e)
     }
 }
 
