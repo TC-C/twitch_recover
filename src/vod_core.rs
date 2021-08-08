@@ -5,7 +5,7 @@ use std::thread::{JoinHandle, spawn};
 pub(crate) fn compute_vod(tracker_link: &str) -> Result<String, String> {
     let page_source = match get_page_source(tracker_link) {
         Ok(source) => source,
-        Err(message) => return Err(message)
+        Err(e) => return Err(e)
     };
     let id = match &INDIVIDUAL_STREAM_ID
         .find(tracker_link) {
@@ -19,16 +19,19 @@ pub(crate) fn compute_vod(tracker_link: &str) -> Result<String, String> {
         Some(time_stamp) => &time_stamp.as_str()[15..34]
     };
     let unix_time = get_unix_time(time_stamp);
-    let channel_name = CHANNEL_NAME
-        .find(&page_source)
-        .unwrap().as_str();
+    let channel_name = match CHANNEL_NAME
+        .find(&page_source) {
+        None => return Err(String::from("Could not find channel name in the referenced link")),
+        Some(channel_name) => channel_name
+    };
+
     let channel_name = &channel_name[7..channel_name.len() - 1];
     let body = format!("{}_{}_{}", channel_name, id, unix_time);
 
     let subdirectory = get_subdirectory(&body);
     match test_links(&subdirectory) {
         Ok(link) => Ok(link),
-        Err(_) => Err(String::from("No available M3U8 URLs"))
+        Err(e) => Err(e)
     }
 }
 
@@ -37,7 +40,7 @@ fn get_subdirectory(body: &str) -> String {
     format!("{}_{}", hash, body)
 }
 
-fn test_links(subdirectory: &str) -> Result<String, ()> {
+fn test_links(subdirectory: &str) -> Result<String, String> {
     let mut threads: Vec<JoinHandle<Result<String, String>>> = Vec::with_capacity(CLOUDFRONT_DOMAINS.len());
     for domain in CLOUDFRONT_DOMAINS {
         let url = format!("https://{}.cloudfront.net/{}/chunked/index-dvr.m3u8", domain, subdirectory);
@@ -56,5 +59,5 @@ fn test_links(subdirectory: &str) -> Result<String, ()> {
             Err(_) => {}
         }
     }
-    Err(())
+    Err(String::from("No available M3U8 URLs"))
 }
