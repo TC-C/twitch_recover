@@ -32,7 +32,7 @@ pub(crate) fn get_page_source(url: &str) -> Result<String, String> {
             response.read_to_string(&mut source).unwrap();
             Ok(source)
         }
-        Err(_) => Err(format!("Couldn't connect to {}", url))
+        Err(e) => Err(e.to_string())
     }
 }
 
