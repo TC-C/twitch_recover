@@ -48,28 +48,32 @@ fn get_subdirectory(body: &str) -> String {
 }
 
 fn test_links(subdirectory: &str) -> Result<String, String> {
-    let mut threads: Vec<JoinHandle<Result<String, String>>> =
-        Vec::with_capacity(CLOUDFRONT_DOMAINS.len());
+    let mut threads: Vec<(String, JoinHandle<Result<String, String>>)> =
+        Vec::with_capacity(CLOUDFRONT_DOMAINS.len() + VOD_DOMAINS.len());
     for domain in CLOUDFRONT_DOMAINS {
         let url = format!(
             "https://{}.cloudfront.net/{}/chunked/index-dvr.m3u8",
             domain, subdirectory
         );
-        let thread = spawn(move || get_page_source(&url));
-        threads.push(thread);
+        let url_copy = url.to_owned();
+        let thread = spawn(move || get_page_source(&url_copy));
+        threads.push((url, thread));
     }
     for domain in VOD_DOMAINS {
         let url = format!(
             "https://{}.twitch.tv/{}/chunked/index-dvr.m3u8",
             domain, subdirectory
         );
-        let thread = spawn(move || get_page_source(&url));
-        threads.push(thread);
+        let url_copy = url.to_owned();
+        let thread = spawn(move || get_page_source(&url_copy));
+        threads.push((url, thread));
     }
 
     for thread in threads {
-        if let Ok(url) = thread.join().unwrap() {
-            return Ok(url);
+        let url = &thread.0;
+        let thread = thread.1;
+        if let Ok(_) = thread.join().unwrap() {
+            return Ok(url.to_owned());
         }
     }
     Err(String::from("No available M3U8 URLs"))
