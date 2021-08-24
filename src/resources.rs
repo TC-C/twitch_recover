@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime, format};
+use chrono::NaiveDateTime;
 use crossterm::{
     execute,
     style::{Color, Print, ResetColor, SetForegroundColor},
@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use reqwest::blocking::Client;
 use sha1::{Digest, Sha1};
-use std::io::{self, Read, Write, stdout};
+use std::io::{self, stdout, Read, Write};
 
 lazy_static! {
     pub(crate) static ref GET_STREAM_ID: Regex = Regex::new("(data-stream=\").*?(\")").unwrap(); //13..24
@@ -16,7 +16,7 @@ lazy_static! {
     pub(crate) static ref INDIVIDUAL_TIME_STAMP: Regex = Regex::new("(<li><div><span>).*?(</span>)").unwrap(); //15..34
     pub(crate) static ref INDIVIDUAL_STREAM_ID: Regex = Regex::new("(streams/)\\d*$()").unwrap(); //8..19
 
-    pub(crate) static ref CHANNEL_NAME: Regex = Regex::new("(name: ')[A-Za-z]*?(')").unwrap(); //7..len()-1
+    pub(crate) static ref CHANNEL_NAME: Regex = Regex::new("(name: ')[A-Za-z0-9]*?(')").unwrap(); //7..len()-1
 
     static ref CLIENT: Client = Client::new();
 }
@@ -30,7 +30,7 @@ pub(crate) const CLOUDFRONT_DOMAINS: [&str; 9] = [
     "d3c27h4odz752x",
     "dgeft87wbj63p",
     "d1m7jfoe9zdc1j",
-    "d1ymi26ma8va5x"
+    "d1ymi26ma8va5x",
 ];
 pub(crate) const VOD_DOMAINS: [&str; 3] = ["vod-secure", "vod-metro", "vod-pop-secure"];
 
@@ -42,7 +42,7 @@ pub(crate) fn get_page_source(url: &str) -> Result<String, String> {
                 Ok(_) => {
                     let status = response.status();
                     if status.as_u16() >= 400 {
-                        return Err(status.to_string())
+                        return Err(status.to_string());
                     }
                 }
                 Err(e) => source = e.to_string(),
@@ -75,7 +75,7 @@ pub(crate) fn error(message: &str) {
     .unwrap();
 }
 
-pub(crate) fn ask(message: &str) -> String{
+pub(crate) fn ask(message: &str) -> String {
     let mut response = String::new();
     print!("{}", message);
     io::stdout().flush().unwrap();
