@@ -36,10 +36,7 @@ pub(crate) fn compute_vod(tracker_link: &str) -> Result<String, String> {
     let body = format!("{}_{}_{}", channel_name, id, unix_time);
 
     let subdirectory = get_subdirectory(&body);
-    match test_links(&subdirectory) {
-        Ok(link) => Ok(link),
-        Err(e) => Err(e),
-    }
+    test_links(&subdirectory)
 }
 
 fn get_subdirectory(body: &str) -> String {
@@ -72,7 +69,7 @@ fn test_links(subdirectory: &str) -> Result<String, String> {
     for thread in threads {
         let url = &thread.0;
         let thread = thread.1;
-        if let Ok(_) = thread.join().unwrap() {
+        if thread.join().unwrap().is_ok() {
             return Ok(url.to_owned());
         }
     }

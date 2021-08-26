@@ -1,5 +1,4 @@
 use crate::resources::{ask, error};
-use std::io::{self, Write};
 use vod_core::compute_vod;
 
 mod resources;
@@ -20,5 +19,4 @@ fn vod_recover_reader() {
 
 fn channel_recover_reader() {
     let channel_name = ask("Enter a channel name to recover >>> ");
-
 }

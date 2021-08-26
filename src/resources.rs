@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use reqwest::blocking::Client;
 use sha1::{Digest, Sha1};
-use std::io::{self, stdout, Read, Write};
+use std::io::{stdin, stdout, Read, Write};
 
 lazy_static! {
     pub(crate) static ref GET_STREAM_ID: Regex = Regex::new("(data-stream=\").*?(\")").unwrap(); //13..24
@@ -41,7 +41,7 @@ pub(crate) fn get_page_source(url: &str) -> Result<String, String> {
             match response.read_to_string(&mut source) {
                 Ok(_) => {
                     let status = response.status();
-                    if status.as_u16() >= 400 {
+                    if status.is_client_error() && status.is_server_error() {
                         return Err(status.to_string());
                     }
                 }
@@ -78,7 +78,7 @@ pub(crate) fn error(message: &str) {
 pub(crate) fn ask(message: &str) -> String {
     let mut response = String::new();
     print!("{}", message);
-    io::stdout().flush().unwrap();
-    io::stdin().read_line(&mut response).unwrap();
+    stdout().flush().unwrap();
+    stdin().read_line(&mut response).unwrap();
     response
 }
