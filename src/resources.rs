@@ -41,7 +41,7 @@ pub(crate) fn get_page_source(url: &str) -> Result<String, String> {
             match response.read_to_string(&mut source) {
                 Ok(_) => {
                     let status = response.status();
-                    if status.is_client_error() && status.is_server_error() {
+                    if status.is_client_error() || status.is_server_error() {
                         return Err(status.to_string());
                     }
                 }
