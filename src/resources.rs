@@ -1,3 +1,6 @@
+use std::io::{stdin, stdout, Read, Write};
+use std::thread::{spawn, JoinHandle};
+
 use chrono::NaiveDateTime;
 use crossterm::{
     execute,
@@ -7,7 +10,6 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use reqwest::blocking::Client;
 use sha1::{Digest, Sha1};
-use std::io::{stdin, stdout, Read, Write};
 
 lazy_static! {
     pub(crate) static ref GET_STREAM_ID: Regex = Regex::new("(data-stream=\").*?(\")").unwrap(); //13..24
@@ -80,5 +82,42 @@ pub(crate) fn ask(message: &str) -> String {
     print!("{}", message);
     stdout().flush().unwrap();
     stdin().read_line(&mut response).unwrap();
-    response
+    response.trim_end_matches(&['\r', '\n'][..]).to_owned()
+}
+
+pub fn test_links(subdirectory: &str) -> Result<String, String> {
+    let mut threads: Vec<(String, JoinHandle<Result<String, String>>)> =
+        Vec::with_capacity(CLOUDFRONT_DOMAINS.len() + VOD_DOMAINS.len());
+    for domain in CLOUDFRONT_DOMAINS {
+        let url = format!(
+            "https://{}.cloudfront.net/{}/chunked/index-dvr.m3u8",
+            domain, subdirectory
+        );
+        let url_copy = url.to_owned();
+        let thread = spawn(move || get_page_source(&url_copy));
+        threads.push((url, thread));
+    }
+    for domain in VOD_DOMAINS {
+        let url = format!(
+            "https://{}.twitch.tv/{}/chunked/index-dvr.m3u8",
+            domain, subdirectory
+        );
+        let url_copy = url.to_owned();
+        let thread = spawn(move || get_page_source(&url_copy));
+        threads.push((url, thread));
+    }
+
+    for thread in threads {
+        let url = &thread.0;
+        let thread = thread.1;
+        if thread.join().unwrap().is_ok() {
+            return Ok(url.to_owned());
+        }
+    }
+    Err(String::from("No available M3U8 URLs"))
+}
+
+pub fn get_subdirectory(body: &str) -> String {
+    let hash = compute_hash(body);
+    format!("{}_{}", hash, body)
 }
