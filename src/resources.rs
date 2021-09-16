@@ -18,7 +18,7 @@ lazy_static! {
     pub(crate) static ref INDIVIDUAL_TIME_STAMP: Regex = Regex::new("(<li><div><span>).*?(</span>)").unwrap(); //15..34
     pub(crate) static ref INDIVIDUAL_STREAM_ID: Regex = Regex::new("(streams/)\\d*$()").unwrap(); //8..19
 
-    pub(crate) static ref CHANNEL_NAME: Regex = Regex::new("(name: ')[A-Za-z0-9]*?(')").unwrap(); //7..len()-1
+    pub(crate) static ref CHANNEL_NAME: Regex = Regex::new(r#"name: '((#)?[a-zA-Z0-9][\w]{2,24})'"#).unwrap(); //7..len()-1
 
     static ref CLIENT: Client = Client::new();
 }
@@ -74,7 +74,7 @@ pub(crate) fn error(message: &str) {
         Print(format!("\n{}", message)),
         ResetColor
     )
-    .unwrap();
+        .unwrap();
 }
 
 pub(crate) fn ask(message: &str) -> String {
