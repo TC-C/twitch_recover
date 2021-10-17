@@ -14,11 +14,11 @@ pub(crate) fn compute_vod(tracker_link: &str) -> Result<String, String> {
 
     let time_stamp = match &INDIVIDUAL_TIME_STAMP.find(&page_source) {
         None => {
-            return Err(String::from(
-                "Could not find a timestamp in the referenced link, Cloudflare may be blocking the page, try again later",
+            return Err(format!(
+                "Could not find a timestamp in the referenced link, Cloudflare may be blocking the page, try again later. Error: {}", page_source,
             ))
         }
-        Some(time_stamp) => &time_stamp.as_str()[15..34],
+        Some(time_stamp) => &time_stamp.as_str()[37..56],
     };
     let unix_time = get_unix_time(time_stamp);
     let channel_name = match CHANNEL_NAME.find(&page_source) {

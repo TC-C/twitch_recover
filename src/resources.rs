@@ -15,7 +15,7 @@ lazy_static! {
     pub(crate) static ref GET_STREAM_ID: Regex = Regex::new("(data-stream=\").*?(\")").unwrap(); //13..24
     pub(crate) static ref GET_TIME_STAMP: Regex = Regex::new("(nowrap data-order=\").*?(\")").unwrap(); //19..38
 
-    pub(crate) static ref INDIVIDUAL_TIME_STAMP: Regex = Regex::new("(<li><div><span>).*?(</span>)").unwrap(); //15..34
+    pub(crate) static ref INDIVIDUAL_TIME_STAMP: Regex = Regex::new("\"stream-timestamp-dt to-dowdatetime\">.*?</div>").unwrap(); //37..56
     pub(crate) static ref INDIVIDUAL_STREAM_ID: Regex = Regex::new("(streams/)\\d*$()").unwrap(); //8..19
 
     pub(crate) static ref CHANNEL_NAME: Regex = Regex::new(r#"name: '((#)?[a-zA-Z0-9][\w]{2,24})'"#).unwrap(); //7..len()-1
@@ -62,6 +62,7 @@ pub(crate) fn compute_hash(body: &str) -> String {
 }
 
 pub(crate) fn get_unix_time(time: &str) -> i64 {
+    dbg!(time);
     NaiveDateTime::parse_from_str(time, "%Y-%m-%d %H:%M:%S")
         .unwrap()
         .timestamp()
@@ -74,7 +75,7 @@ pub(crate) fn error(message: &str) {
         Print(format!("\n{}", message)),
         ResetColor
     )
-        .unwrap();
+    .unwrap();
 }
 
 pub(crate) fn ask(message: &str) -> String {
